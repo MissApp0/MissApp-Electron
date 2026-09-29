@@ -4,6 +4,7 @@ const { spawn } = require("child_process");
 
 const MISSAPP_URL = "https://missapp0.github.io/";
 const SESSION_PARTITION = "persist:missapp";
+const MISSAPP_ORIGIN = "https://missapp0.github.io";
 
 let mainWindow = null;
 let callWindow = null;
@@ -30,9 +31,16 @@ function createWindow() {
   win.loadURL(MISSAPP_URL);
 
   win.webContents.setWindowOpenHandler(({ url }) => {
-    if (url.startsWith("https://missapp0.github.io/")) return { action: "allow" };
+    if (url.startsWith(MISSAPP_ORIGIN)) return { action: "allow" };
     shell.openExternal(url);
     return { action: "deny" };
+  });
+
+  win.webContents.on("will-navigate", (event, url) => {
+    if (!url.startsWith(MISSAPP_ORIGIN)) {
+      event.preventDefault();
+      shell.openExternal(url);
+    }
   });
 
   win.on("closed", () => {
@@ -138,6 +146,14 @@ ipcMain.handle("desktop:notify", (_event, payload = {}) => {
 });
 
 app.whenReady().then(() => {
+  app.setAppUserModelId("com.missapp.desktop");
+
+  const persistentSession = require("electron").session.fromPartition(SESSION_PARTITION);
+  persistentSession.setPermissionRequestHandler((webContents, permission, callback) => {
+    const url = webContents.getURL();
+    callback(url.startsWith(MISSAPP_ORIGIN) && ["notifications", "media", "geolocation"].includes(permission));
+  });
+
   createWindow();
   app.on("activate", () => {
     if (BrowserWindow.getAllWindows().length === 0) createWindow();
