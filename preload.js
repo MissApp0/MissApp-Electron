@@ -14,7 +14,7 @@ contextBridge.exposeInMainWorld("missappDesktop", {
     ipcRenderer.on("desktop:call-action", listener);
     return () => ipcRenderer.removeListener("desktop:call-action", listener);
   },
-  onCallInfo(callback) {
+  callAction: action => ipcRenderer.send("desktop:call-action", action),\n  onCallInfo(callback) {
     if (typeof callback !== "function") return () => {};
     const listener = (_event, info) => callback(info);
     ipcRenderer.on("call:info", listener);
