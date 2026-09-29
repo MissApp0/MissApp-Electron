@@ -245,14 +245,24 @@ ipcMain.handle("desktop:notify", (_event, payload = {}) => {
   return true;
 });
 
-app.whenReady().then(async () => {
-  try {
-    await ensureMain();
-  } catch (error) {
-    console.error("MissApp startup sync failed:", error);
-  }
-
+app.whenReady().then(() => {
+  // Show the UI immediately. GitHub sync must never block Electron startup.
   createWindow();
+
+  // Sync the local copy in the background so slow downloads do not make
+  // the desktop window feel frozen or delay the UI.
+  ensureMain(message => {
+    if (mainWindow && !mainWindow.isDestroyed()) {
+      mainWindow.webContents.send("main:progress", { message });
+    }
+  }).catch(error => {
+    console.error("MissApp background sync failed:", error);
+    if (mainWindow && !mainWindow.isDestroyed()) {
+      mainWindow.webContents.send("main:progress", {
+        message: "MissApp is open. Background sync failed: " + error.message
+      });
+    }
+  });
 
   app.on("activate", () => {
     if (BrowserWindow.getAllWindows().length === 0) createWindow();
