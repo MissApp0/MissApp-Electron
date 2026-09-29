@@ -1,4 +1,4 @@
-const { app, BrowserWindow, ipcMain, shell } = require("electron");
+const { app, BrowserWindow, ipcMain, shell, Notification } = require("electron");
 const path = require("path");
 const fs = require("fs");
 const { spawn } = require("child_process");
@@ -8,7 +8,7 @@ const REPO_NAME = "MissApp0.github.io";
 const BRANCH = "main";
 const REPO_URL = `https://github.com/${REPO_OWNER}/${REPO_NAME}.git`;
 
-function createWindow() {
+let mainWindow = null;\nlet callWindow = null;\n\nfunction createWindow() {
   const win = new BrowserWindow({
     width: 820, height: 600, minWidth: 650, minHeight: 500,
     title: "MissApp", backgroundColor: "#081216", autoHideMenuBar: true,
