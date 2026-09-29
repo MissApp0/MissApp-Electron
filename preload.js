@@ -1,13 +1,12 @@
 const { contextBridge, ipcRenderer } = require("electron");
-
-contextBridge.exposeInMainWorld("missappCloner", {
-  listRepositories: () => ipcRenderer.invoke("repos:list"),
-  cloneRepository: repo => ipcRenderer.invoke("repo:clone", repo),
-  openFolder: folder => ipcRenderer.invoke("repo:open-folder", folder),
-  onCloneProgress(callback) {
+contextBridge.exposeInMainWorld("missappDesktop", {
+  checkMain: () => ipcRenderer.invoke("main:check"),
+  updateMain: () => ipcRenderer.invoke("main:update"),
+  openMain: () => ipcRenderer.invoke("main:open"),
+  onProgress(callback) {
     if (typeof callback !== "function") return () => {};
     const listener = (_event, progress) => callback(progress);
-    ipcRenderer.on("clone:progress", listener);
-    return () => ipcRenderer.removeListener("clone:progress", listener);
+    ipcRenderer.on("main:progress", listener);
+    return () => ipcRenderer.removeListener("main:progress", listener);
   }
 });
