@@ -75,7 +75,7 @@ ipcMain.handle("main:update",async event=>{
   return {ok:true,message:r.firstInstall?"MissApp downloaded.":r.updated?"MissApp updated.":"MissApp is already up to date."};
 });
 
-ipcMain.handle("main:open",async()=>{
+ipcMain.handle("main:remove",async()=>{\n  const root=getMainRoot();\n  if(!fs.existsSync(root)) return {ok:true,message:"Local MissApp copy is already removed."};\n  await fs.promises.rm(root,{recursive:true,force:true});\n  return {ok:true,message:"Local MissApp copy removed."};\n});\n\nipcMain.handle("app:uninstall",async()=>{\n  if(process.platform!=="win32") throw new Error("The Windows uninstaller is only available in the Windows installer build.");\n  const candidates=[path.join(path.dirname(process.execPath),"Uninstall MissApp GitHub Cloner.exe"),path.join(path.dirname(process.execPath),"Uninstall MissApp.exe")];\n  const uninstaller=candidates.find(p=>fs.existsSync(p));\n  if(!uninstaller) throw new Error("This copy was not installed with the Windows installer. Use the installer build to uninstall the app.");\n  const child=spawn(uninstaller,[],{detached:true,stdio:"ignore",windowsHide:true});\n  child.unref();\n  return {ok:true,message:"Uninstaller started."};\n});\n\nipcMain.handle("main:open",async()=>{
   const root=getMainRoot();
   const result=await shell.openPath(root);
   if(result)throw new Error(result);
