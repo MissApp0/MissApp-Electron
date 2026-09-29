@@ -4,7 +4,7 @@
 
 Name "${APP_NAME}"
 OutFile "dist\\MissApp-SETUP.exe"
-InstallDir "${INSTALL_DIR}"
+InstallDir "$LOCALAPPDATA\\Programs\\MissApp"
 RequestExecutionLevel user
 Unicode True
 SetCompressor /SOLID lzma
