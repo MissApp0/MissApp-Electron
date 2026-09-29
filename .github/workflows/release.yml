@@ -5,7 +5,7 @@ on:
     branches:
       - main
     tags:
-      - "v*.*.*"
+      - "v*"
   workflow_dispatch:
 
 permissions:
@@ -24,9 +24,7 @@ jobs:
       - name: Install build dependencies
         run: npm install
       - name: Build Windows EXE
-        run: npm run dist:win
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: npm run dist:win -- --publish never
       - name: Upload EXE artifacts
         uses: actions/upload-artifact@v4
         with:
