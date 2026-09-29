@@ -1,72 +1,33 @@
 # MissApp Electron
 
-Desktop client and release/update system for MissApp.
+## MissApp GitHub Cloner — Windows EXE
 
-## Repositories
+This repository builds a standalone Windows EXE. End users do not need Node.js, npm, or npm install to run the finished application.
 
-- **Web app:** `MissApp0/MissApp0.github.io`
-- **Desktop app:** `MissApp0/MissApp-Electron`
+## Download and run
 
-The desktop client currently uses the production MissApp web application at:
+1. Open the repository's Releases page.
+2. Download either the Portable EXE (runs directly) or the Windows installer EXE.
+3. Launch the EXE.
 
-`https://missapp0.github.io`
+The EXE contains the Electron runtime and application files.
 
-This keeps the Firebase/Firestore application logic shared while this repository owns Electron packaging, desktop security, and automatic updates.
+Note: the cloner currently uses the Windows git command to perform repository clones. Git must be installed on the computer for cloning to work.
 
-## Run locally
+## Maintainers
 
-```bash
-npm install
-npm start
-```
+Node.js/npm are only used by GitHub Actions to build the EXE. End users do not need them.
 
-## Build
-
-```bash
-npm run dist:win
-npm run dist:linux
-npm run dist:mac
-```
-
-Installers are written to `dist/`.
+Push a version tag such as v1.0.1 to build and publish the Windows EXEs automatically. You can also run the workflow manually; that uploads the EXEs as a GitHub Actions artifact.
 
 ## Automatic updates
 
-MissApp uses `electron-updater` and GitHub Releases.
-
-Release flow:
-
-1. Change the version in `package.json`, for example `1.0.1`.
-2. Commit and push the change.
-3. Create and push a matching tag such as `v1.0.1`.
-4. GitHub Actions builds the Windows installer.
-5. The workflow publishes the installer to the GitHub Release.
-6. Installed MissApp clients check for updates.
-7. Updates download in the background.
-8. MissApp asks the user to restart and install the update.
-
-The updater uses GitHub's Actions token during CI. No long-lived GitHub token is stored in the repository.
+Installed builds use electron-updater and GitHub Releases. No long-lived GitHub token is stored in the repository.
 
 ## Security
 
-The Electron window uses:
-
-- `contextIsolation: true`
-- `nodeIntegration: false`
+- contextIsolation enabled
+- nodeIntegration disabled
 - sandboxed preload
-- restricted external navigation
-- external links opened in the system browser
-- updater logic kept outside the web renderer
-
-## Future desktop features
-
-The repository is ready to grow with:
-
-- system tray
-- native notifications
-- start with Windows
-- offline caching
-- native call controls
-- Windows code signing
-- macOS signing/notarization
-- dedicated desktop settings
+- restricted filesystem access
+- MissApp0-only repository validation
