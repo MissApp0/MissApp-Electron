@@ -33,7 +33,8 @@
       "cloner.css",
       "cloner.js",
       "updater.js",
-      "package.json"
+      "package.json",
+      "call.html"
     ],
     "directories": {
       "output": "dist"
