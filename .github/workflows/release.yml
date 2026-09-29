@@ -28,8 +28,11 @@ jobs:
           $url = "https://github.com/electron/electron/releases/download/v$env:ELECTRON_VERSION/electron-v$env:ELECTRON_VERSION-win32-x64.zip"
           Invoke-WebRequest -Uri $url -OutFile $electronZip
           Expand-Archive -Path $electronZip -DestinationPath $electronDir -Force
+          New-Item -ItemType Directory -Force -Path $buildDir | Out-Null
+          Copy-Item "$electronDir\\*" $buildDir -Recurse -Force
+          Rename-Item "$buildDir\\electron.exe" "MissApp.exe"
           New-Item -ItemType Directory -Force -Path "$buildDir\\resources\\app" | Out-Null
-          Copy-Item "$electronDir\\electron.exe" "$buildDir\\MissApp.exe"
+          Remove-Item "$buildDir\\resources\\default_app.asar" -ErrorAction SilentlyContinue
           Copy-Item "$env:GITHUB_WORKSPACE\\main.js" "$buildDir\\resources\\app\\main.js"
           Copy-Item "$env:GITHUB_WORKSPACE\\preload.js" "$buildDir\\resources\\app\\preload.js"
           Copy-Item "$env:GITHUB_WORKSPACE\\call.html" "$buildDir\\resources\\app\\call.html"
@@ -59,7 +62,7 @@ jobs:
           if-no-files-found: error
 
       - name: Attach Windows artifacts to GitHub Release
-        uses: softprops/action-gh-release@v3
+        uses: softprops/action-gh-release@v2
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
