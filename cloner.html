@@ -1,1 +1,16 @@
-<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>MissApp GitHub Cloner</title><link rel="stylesheet" href="cloner.css"></head><body><main class="shell"><header class="topbar"><div class="brand"><div class="logo">M</div><div><strong>MissApp</strong><span>GitHub Cloner</span></div></div><button id="refresh" class="secondary">↻ Refresh</button></header><section class="hero"><span class="eyebrow">MISSAPP0 ONLY</span><h1>Clone your MissApp repositories.</h1><p>Browse repositories owned by <b>MissApp0</b>, clone one locally, and open its project folder.</p></section><div id="notice" class="notice" hidden></div><section class="toolbar"><input id="search" type="search" placeholder="Search repositories…"><span id="count">Loading…</span></section><section id="repos" class="repos"><div class="loading">Loading MissApp0 repositories…</div></section><footer><span>🔒 Repository restriction: <b>MissApp0</b></span><span>Local clones: Documents/MissApp/Repositories</span></footer></main><script src="cloner.js"></script></body></html>
+<!doctype html>
+<html lang="en">
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>MissApp</title><link rel="stylesheet" href="cloner.css"></head>
+<body>
+<main class="shell">
+  <header class="topbar"><div class="brand"><div class="logo">M</div><div><strong>MissApp</strong><span>Desktop</span></div></div></header>
+  <section class="hero"><span class="eyebrow">MISSAPP</span><h1>Open MissApp.</h1><p>This desktop app opens the main MissApp repository. It checks for updates and only syncs the local copy when GitHub has changed.</p></section>
+  <div id="notice" class="notice" hidden></div>
+  <section class="repo">
+    <h2>MissApp Main</h2><p id="status">Checking for updates…</p>
+    <div class="actions"><button id="open" class="primary">Open MissApp</button><button id="update" class="secondary" hidden>Update</button></div>
+  </section>
+  <footer><span>Repository: <b>MissApp0/MissApp0.github.io</b></span><span>Local copy: Documents/MissApp/Main</span></footer>
+</main>
+<script src="cloner.js"></script>
+</body></html>
