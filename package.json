@@ -29,12 +29,8 @@
     "files": [
       "main.js",
       "preload.js",
-      "cloner.html",
-      "cloner.css",
-      "cloner.js",
-      "updater.js",
-      "package.json",
-      "call.html"
+      "call.html",
+      "package.json"
     ],
     "directories": {
       "output": "dist"
