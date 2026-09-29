@@ -35,7 +35,9 @@
       "updater.js",
       "package.json"
     ],
-    "directories": { "output": "dist" },
+    "directories": {
+      "output": "dist"
+    },
     "publish": {
       "provider": "github",
       "owner": "MissApp0",
@@ -43,8 +45,21 @@
       "releaseType": "release"
     },
     "win": {
-      "target": [{ "target": "nsis", "arch": ["x64"] }],
-      "artifactName": "MissApp-GitHub-Cloner-Setup-${version}.${ext}"
+      "target": [
+        {
+          "target": "nsis",
+          "arch": [
+            "x64"
+          ]
+        },
+        {
+          "target": "portable",
+          "arch": [
+            "x64"
+          ]
+        }
+      ],
+      "artifactName": "MissApp-GitHub-Cloner-${version}-${arch}.${ext}"
     },
     "nsis": {
       "oneClick": false,
@@ -52,7 +67,20 @@
       "perMachine": false,
       "deleteAppDataOnUninstall": false
     },
-    "linux": { "target": ["AppImage"], "category": "Development" },
-    "mac": { "target": ["dmg"], "category": "public.app-category.developer-tools" }
+    "linux": {
+      "target": [
+        "AppImage"
+      ],
+      "category": "Development"
+    },
+    "mac": {
+      "target": [
+        "dmg"
+      ],
+      "category": "public.app-category.developer-tools"
+    },
+    "portable": {
+      "artifactName": "MissApp-GitHub-Cloner-Portable-${version}.${ext}"
+    }
   }
 }
