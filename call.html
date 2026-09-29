@@ -4,4 +4,7 @@ window.missappDesktop.onCallAction;window.missappDesktop.onCallInfo(info=>{callI
 document.getElementById("accept").onclick=()=>window.missappDesktop.callAction?.({type:"accept",callId});
 document.getElementById("decline").onclick=()=>window.missappDesktop.callAction?.({type:"decline",callId});
 document.getElementById("end").onclick=()=>window.missappDesktop.callAction?.({type:"end"});
-window.missappDesktop.onCallInfo;\nwindow.missappDesktop.onCallAction;\nwindow.missappDesktop.onCallActive(()=>{document.getElementById("actions").classList.add("hidden");document.getElementById("active").classList.remove("hidden");document.getElementById("type").textContent="Call in progress";});\n</script></body></html>
+window.missappDesktop.onCallInfo;
+window.missappDesktop.onCallAction;
+window.missappDesktop.onCallActive(()=>{document.getElementById("actions").classList.add("hidden");document.getElementById("active").classList.remove("hidden");document.getElementById("type").textContent="Call in progress";});
+</script></body></html>
