@@ -65,7 +65,7 @@ async function ensureMain(sendProgress = () => {}) {
 
   if (!fs.existsSync(path.join(root, ".git"))) {
     sendProgress("Downloading MissApp for the first time…");
-    await runGit(["clone", "--progress", "--branch", BRANCH, REPO_URL, root], null, sendProgress);
+    await runGit(["clone", "--depth", "1", "--progress", "--branch", BRANCH, REPO_URL, root], null, sendProgress);
     return { updated: true, firstInstall: true };
   }
 
@@ -77,7 +77,7 @@ async function ensureMain(sendProgress = () => {}) {
   }
 
   sendProgress("MissApp has an update. Syncing…");
-  await runGit(["fetch", "origin", BRANCH], root, sendProgress);
+  await runGit(["fetch", "--depth", "1", "origin", BRANCH], root, sendProgress);
   await runGit(["reset", "--hard", "origin/" + BRANCH], root, sendProgress);
   return { updated: true, firstInstall: false };
 }
