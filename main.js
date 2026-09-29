@@ -185,7 +185,7 @@ ipcMain.handle("app:uninstall", async () => {
     path.join(path.dirname(process.execPath), "Uninstall MissApp GitHub Cloner.exe"),
     path.join(path.dirname(process.execPath), "Uninstall MissApp.exe")
   ];
-  const uninstaller = candidates.find(p => fs.existsSync(p));
+  const uninstaller = candidates.find(p => require("fs").existsSync(p));
 
   if (!uninstaller) {
     throw new Error("This copy was not installed with the Windows installer. Use the installer build to uninstall the app.");
@@ -198,13 +198,6 @@ ipcMain.handle("app:uninstall", async () => {
   });
   child.unref();
   return { ok: true, message: "Uninstaller started." };
-});
-
-ipcMain.handle("main:open", async () => {
-  const root = getMainRoot();
-  const result = await shell.openPath(root);
-  if (result) throw new Error(result);
-  return { ok: true, message: "Opened the MissApp folder." };
 });
 
 ipcMain.on("desktop:incoming-call", (_event, info) => {
