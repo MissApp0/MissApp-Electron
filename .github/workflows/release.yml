@@ -40,6 +40,10 @@ jobs:
           Set-Content -Path "$buildDir\\resources\\app\\package.json" -Value $package -Encoding UTF8
           $makensis = Get-Command makensis -ErrorAction SilentlyContinue
           if (-not $makensis) {
+            choco install nsis -y --no-progress
+            $makensis = Get-Command makensis -ErrorAction SilentlyContinue
+          }
+          if (-not $makensis) {
             $candidates = @("C:\\Program Files (x86)\\NSIS\\makensis.exe","C:\\Program Files\\NSIS\\makensis.exe")
             $makensisPath = $candidates | Where-Object { Test-Path $_ } | Select-Object -First 1
           } else { $makensisPath = $makensis.Source }
