@@ -1,4 +1,4 @@
-const { app, BrowserWindow, dialog, shell, session } = require("electron");
+const { app, BrowserWindow, dialog, shell } = require("electron");
 const path = require("path");
 const { autoUpdater } = require("electron-updater");
 
@@ -28,9 +28,7 @@ function createWindow() {
   mainWindow.once("ready-to-show", () => mainWindow.show());
 
   mainWindow.webContents.setWindowOpenHandler(({ url }) => {
-    if (/^https?:/i.test(url)) {
-      shell.openExternal(url);
-    }
+    if (/^https?:/i.test(url)) shell.openExternal(url);
     return { action: "deny" };
   });
 
@@ -44,14 +42,6 @@ function createWindow() {
   mainWindow.loadURL(MISSAPP_URL);
 }
 
-function configureSecurity() {
-  session.defaultSession.webRequest.onHeadersReceived((details, callback) => {
-    const headers = { ...details.responseHeaders };
-    delete headers["Content-Security-Policy"];
-    callback({ responseHeaders: headers });
-  });
-}
-
 function setupUpdater() {
   if (updateCheckStarted || !app.isPackaged) return;
   updateCheckStarted = true;
@@ -61,9 +51,7 @@ function setupUpdater() {
   autoUpdater.allowDowngrade = false;
 
   autoUpdater.on("checking-for-update", () => {
-    mainWindow?.webContents.send("missapp:update-status", {
-      state: "checking"
-    });
+    mainWindow?.webContents.send("missapp:update-status", { state: "checking" });
   });
 
   autoUpdater.on("update-available", (info) => {
@@ -109,9 +97,7 @@ function setupUpdater() {
 }
 
 app.whenReady().then(() => {
-  configureSecurity();
   createWindow();
-
   setTimeout(setupUpdater, 4000);
 
   app.on("activate", () => {
