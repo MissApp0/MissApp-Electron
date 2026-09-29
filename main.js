@@ -8,82 +8,257 @@ const REPO_NAME = "MissApp0.github.io";
 const BRANCH = "main";
 const REPO_URL = `https://github.com/${REPO_OWNER}/${REPO_NAME}.git`;
 
-let mainWindow = null;\nlet callWindow = null;\n\nfunction createWindow() {
-  const win = new BrowserWindow({
-    width: 820, height: 600, minWidth: 650, minHeight: 500,
-    title: "MissApp", backgroundColor: "#081216", autoHideMenuBar: true,
-    webPreferences: { preload: path.join(__dirname, "preload.js"), contextIsolation: true, nodeIntegration: false, sandbox: true }
-  });
-  win.loadFile(path.join(__dirname, "cloner.html"));
-}
+let mainWindow = null;
+let callWindow = null;
 
-function getMainRoot() { return path.join(app.getPath("documents"), "MissApp", "Main"); }
+function getMainRoot() {
+  return path.join(app.getPath("documents"), "MissApp", "Main");
+}
 
 function runGit(args, cwd, sendProgress) {
   return new Promise((resolve, reject) => {
     const git = spawn("git", args, { cwd, windowsHide: true });
     let errorText = "";
-    git.stdout.on("data", c => { const line=c.toString().trim(); if(line&&sendProgress)sendProgress(line); });
-    git.stderr.on("data", c => { const line=c.toString().trim(); if(line){errorText+=line+"\\n";if(sendProgress)sendProgress(line);} });
-    git.on("error", e => reject(new Error(e.code==="ENOENT" ? "Git is not installed or is not available on PATH." : e.message)));
-    git.on("close", code => code===0 ? resolve() : reject(new Error(errorText.trim() || "git exited with code "+code)));
+    git.stdout.on("data", c => {
+      const line = c.toString().trim();
+      if (line && sendProgress) sendProgress(line);
+    });
+    git.stderr.on("data", c => {
+      const line = c.toString().trim();
+      if (line) {
+        errorText += line + "\n";
+        if (sendProgress) sendProgress(line);
+      }
+    });
+    git.on("error", e => reject(new Error(
+      e.code === "ENOENT" ? "Git is not installed or is not available on PATH." : e.message
+    )));
+    git.on("close", code => code === 0
+      ? resolve()
+      : reject(new Error(errorText.trim() || "git exited with code " + code)));
   });
 }
 
-async function remoteHead(dir) {
-  let out="";
-  await runGit(["ls-remote",REPO_URL,"refs/heads/"+BRANCH],null,line=>{out+=line+"\n"});
-  const sha=out.trim().split(/\s+/)[0];
-  if(!/^[a-f0-9]{40}$/.test(sha)) throw new Error("Could not read the MissApp update version.");
+async function remoteHead() {
+  let out = "";
+  await runGit(["ls-remote", REPO_URL, "refs/heads/" + BRANCH], null, line => {
+    out += line + "\n";
+  });
+  const sha = out.trim().split(/\s+/)[0];
+  if (!/^[a-f0-9]{40}$/.test(sha)) {
+    throw new Error("Could not read the MissApp update version.");
+  }
   return sha;
 }
 
 async function localHead(dir) {
-  let out="";
-  await runGit(["rev-parse","HEAD"],dir,line=>{out+=line+"\n"});
+  let out = "";
+  await runGit(["rev-parse", "HEAD"], dir, line => {
+    out += line + "\n";
+  });
   return out.trim().split(/\s+/)[0];
 }
 
-async function ensureMain(sendProgress) {
-  const root=getMainRoot();
-  await fs.promises.mkdir(path.dirname(root),{recursive:true});
-  if(!fs.existsSync(path.join(root,".git"))){
+async function ensureMain(sendProgress = () => {}) {
+  const root = getMainRoot();
+  await fs.promises.mkdir(path.dirname(root), { recursive: true });
+
+  if (!fs.existsSync(path.join(root, ".git"))) {
     sendProgress("Downloading MissApp for the first time…");
-    await runGit(["clone","--progress","--branch",BRANCH,REPO_URL,root],null,sendProgress);
-    return {updated:true,firstInstall:true};
+    await runGit(["clone", "--progress", "--branch", BRANCH, REPO_URL, root], null, sendProgress);
+    return { updated: true, firstInstall: true };
   }
-  const remote=await remoteHead(root);
-  const local=await localHead(root);
-  if(remote===local)return {updated:false,firstInstall:false};
+
+  const remote = await remoteHead();
+  const local = await localHead(root);
+
+  if (remote === local) {
+    return { updated: false, firstInstall: false };
+  }
+
   sendProgress("MissApp has an update. Syncing…");
-  await runGit(["fetch","origin",BRANCH],root,sendProgress);
-  await runGit(["reset","--hard","origin/"+BRANCH],root,sendProgress);
-  return {updated:true,firstInstall:false};
+  await runGit(["fetch", "origin", BRANCH], root, sendProgress);
+  await runGit(["reset", "--hard", "origin/" + BRANCH], root, sendProgress);
+  return { updated: true, firstInstall: false };
 }
 
-ipcMain.handle("main:check",async()=>{
-  const root=getMainRoot();
-  if(!fs.existsSync(path.join(root,".git"))) return {updateAvailable:true,message:"MissApp is ready for its first download."};
-  const remote=await remoteHead(root);
-  const local=await localHead(root);
-  return remote===local ? {updateAvailable:false,message:"MissApp is up to date."} : {updateAvailable:true,message:"A MissApp update is available."};
+function createWindow() {
+  const win = new BrowserWindow({
+    width: 1180,
+    height: 820,
+    minWidth: 850,
+    minHeight: 600,
+    title: "MissApp",
+    backgroundColor: "#081216",
+    autoHideMenuBar: true,
+    webPreferences: {
+      preload: path.join(__dirname, "preload.js"),
+      contextIsolation: true,
+      nodeIntegration: false,
+      sandbox: true
+    }
+  });
+
+  mainWindow = win;
+  win.loadURL("https://missapp0.github.io/");
+  win.on("closed", () => {
+    if (mainWindow === win) mainWindow = null;
+  });
+}
+
+function createCallWindow(info = {}) {
+  if (callWindow && !callWindow.isDestroyed()) {
+    callWindow.show();
+    callWindow.focus();
+    callWindow.setAlwaysOnTop(true, "floating");
+    return;
+  }
+
+  callWindow = new BrowserWindow({
+    width: 360,
+    height: 430,
+    minWidth: 320,
+    minHeight: 360,
+    title: info.title || "MissApp Call",
+    alwaysOnTop: true,
+    backgroundColor: "#081216",
+    autoHideMenuBar: true,
+    webPreferences: {
+      preload: path.join(__dirname, "preload.js"),
+      contextIsolation: true,
+      nodeIntegration: false,
+      sandbox: true
+    }
+  });
+
+  callWindow.setAlwaysOnTop(true, "floating");
+  callWindow.loadFile(path.join(__dirname, "call.html"));
+  callWindow.webContents.once("did-finish-load", () => {
+    callWindow.webContents.send("call:info", info);
+  });
+  callWindow.on("closed", () => {
+    callWindow = null;
+  });
+}
+
+ipcMain.handle("main:check", async () => {
+  const root = getMainRoot();
+  if (!fs.existsSync(path.join(root, ".git"))) {
+    return { updateAvailable: true, message: "MissApp is ready for its first download." };
+  }
+
+  const remote = await remoteHead();
+  const local = await localHead(root);
+  return remote === local
+    ? { updateAvailable: false, message: "MissApp is up to date." }
+    : { updateAvailable: true, message: "A MissApp update is available." };
 });
 
-ipcMain.handle("main:update",async event=>{
-  const send=m=>event.sender.send("main:progress",{message:m});
-  const r=await ensureMain(send);
-  return {ok:true,message:r.firstInstall?"MissApp downloaded.":r.updated?"MissApp updated.":"MissApp is already up to date."};
+ipcMain.handle("main:update", async event => {
+  const send = message => event.sender.send("main:progress", { message });
+  const result = await ensureMain(send);
+  return {
+    ok: true,
+    message: result.firstInstall
+      ? "MissApp downloaded."
+      : result.updated
+        ? "MissApp updated."
+        : "MissApp is already up to date."
+  };
 });
 
-ipcMain.handle("main:remove",async()=>{\n  const root=getMainRoot();\n  if(!fs.existsSync(root)) return {ok:true,message:"Local MissApp copy is already removed."};\n  await fs.promises.rm(root,{recursive:true,force:true});\n  return {ok:true,message:"Local MissApp copy removed."};\n});\n\nipcMain.handle("app:uninstall",async()=>{\n  if(process.platform!=="win32") throw new Error("The Windows uninstaller is only available in the Windows installer build.");\n  const candidates=[path.join(path.dirname(process.execPath),"Uninstall MissApp GitHub Cloner.exe"),path.join(path.dirname(process.execPath),"Uninstall MissApp.exe")];\n  const uninstaller=candidates.find(p=>fs.existsSync(p));\n  if(!uninstaller) throw new Error("This copy was not installed with the Windows installer. Use the installer build to uninstall the app.");\n  const child=spawn(uninstaller,[],{detached:true,stdio:"ignore",windowsHide:true});\n  child.unref();\n  return {ok:true,message:"Uninstaller started."};\n});\n\nipcMain.handle("main:open",async()=>{
-  const root=getMainRoot();
-  const result=await shell.openPath(root);
-  if(result)throw new Error(result);
-  return {ok:true,message:"Opened the MissApp folder."};
+ipcMain.handle("main:remove", async () => {
+  const root = getMainRoot();
+  if (!fs.existsSync(root)) {
+    return { ok: true, message: "Local MissApp copy is already removed." };
+  }
+  await fs.promises.rm(root, { recursive: true, force: true });
+  return { ok: true, message: "Local MissApp copy removed." };
 });
 
-app.whenReady().then(()=>{
+ipcMain.handle("app:uninstall", async () => {
+  if (process.platform !== "win32") {
+    throw new Error("The Windows uninstaller is only available in the Windows installer build.");
+  }
+
+  const candidates = [
+    path.join(path.dirname(process.execPath), "Uninstall MissApp GitHub Cloner.exe"),
+    path.join(path.dirname(process.execPath), "Uninstall MissApp.exe")
+  ];
+  const uninstaller = candidates.find(p => fs.existsSync(p));
+
+  if (!uninstaller) {
+    throw new Error("This copy was not installed with the Windows installer. Use the installer build to uninstall the app.");
+  }
+
+  const child = spawn(uninstaller, [], {
+    detached: true,
+    stdio: "ignore",
+    windowsHide: true
+  });
+  child.unref();
+  return { ok: true, message: "Uninstaller started." };
+});
+
+ipcMain.handle("main:open", async () => {
+  const root = getMainRoot();
+  const result = await shell.openPath(root);
+  if (result) throw new Error(result);
+  return { ok: true, message: "Opened the MissApp folder." };
+});
+
+ipcMain.on("desktop:incoming-call", (_event, info) => {
+  createCallWindow(info);
+});
+
+ipcMain.on("desktop:close-call-window", () => {
+  if (callWindow && !callWindow.isDestroyed()) callWindow.close();
+});
+
+ipcMain.on("desktop:call-action", (_event, action) => {
+  if (action?.type === "accept" && callWindow && !callWindow.isDestroyed()) {
+    callWindow.webContents.send("call:active");
+  }
+  if (action?.type !== "accept" && callWindow && !callWindow.isDestroyed()) {
+    callWindow.close();
+  }
+  if (mainWindow && !mainWindow.isDestroyed()) {
+    mainWindow.webContents.send("desktop:call-action", action);
+    mainWindow.show();
+    mainWindow.focus();
+  }
+});
+
+ipcMain.handle("desktop:notify", (_event, payload = {}) => {
+  if (!Notification.isSupported()) return false;
+  const notification = new Notification({
+    title: payload.title || "MissApp",
+    body: payload.body || "New message"
+  });
+  notification.on("click", () => {
+    if (mainWindow && !mainWindow.isDestroyed()) {
+      mainWindow.show();
+      mainWindow.focus();
+    }
+  });
+  notification.show();
+  return true;
+});
+
+app.whenReady().then(async () => {
+  try {
+    await ensureMain();
+  } catch (error) {
+    console.error("MissApp startup sync failed:", error);
+  }
+
   createWindow();
-  app.on("activate",()=>{if(BrowserWindow.getAllWindows().length===0)createWindow()});
+
+  app.on("activate", () => {
+    if (BrowserWindow.getAllWindows().length === 0) createWindow();
+  });
 });
-app.on("window-all-closed",()=>{if(process.platform!=="darwin")app.quit()});
+
+app.on("window-all-closed", () => {
+  if (process.platform !== "darwin") app.quit();
+});
