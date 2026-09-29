@@ -1,8 +1,8 @@
 {
   "name": "missapp-desktop",
-  "productName": "MissApp GitHub Cloner",
+  "productName": "MissApp",
   "version": "1.0.0",
-  "description": "MissApp0-only GitHub repository cloner desktop app.",
+  "description": "MissApp desktop client with realtime messaging and calls.",
   "main": "main.js",
   "author": "MissApp0",
   "license": "MIT",
@@ -23,8 +23,8 @@
     "electron-builder": "^26.0.12"
   },
   "build": {
-    "appId": "com.missapp.githubcloner",
-    "productName": "MissApp GitHub Cloner",
+    "appId": "com.missapp.desktop",
+    "productName": "MissApp",
     "asar": true,
     "files": [
       "main.js",
@@ -60,7 +60,7 @@
           ]
         }
       ],
-      "artifactName": "MissApp-GitHub-Cloner-${version}-${arch}.${ext}"
+      "artifactName": "MissApp-${version}-${arch}.${ext}"
     },
     "nsis": {
       "oneClick": false,
@@ -81,7 +81,7 @@
       "category": "public.app-category.developer-tools"
     },
     "portable": {
-      "artifactName": "MissApp-GitHub-Cloner-Portable-${version}.${ext}"
+      "artifactName": "MissApp-Portable-${version}.${ext}"
     }
   }
 }
