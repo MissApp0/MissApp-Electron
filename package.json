@@ -1,12 +1,12 @@
 {
   "name": "missapp-desktop",
-  "productName": "MissApp",
+  "productName": "MissApp GitHub Cloner",
   "version": "1.0.0",
-  "description": "MissApp desktop client for Windows, macOS and Linux.",
+  "description": "MissApp0-only GitHub repository cloner desktop app.",
   "main": "main.js",
   "author": "MissApp0",
   "license": "MIT",
-  "homepage": "https://missapp0.github.io",
+  "homepage": "https://github.com/MissApp0",
   "scripts": {
     "start": "electron .",
     "dev": "electron .",
@@ -23,18 +23,19 @@
     "electron-builder": "^26.0.12"
   },
   "build": {
-    "appId": "com.missapp.desktop",
-    "productName": "MissApp",
+    "appId": "com.missapp.githubcloner",
+    "productName": "MissApp GitHub Cloner",
     "asar": true,
     "files": [
       "main.js",
       "preload.js",
+      "cloner.html",
+      "cloner.css",
+      "cloner.js",
       "updater.js",
       "package.json"
     ],
-    "directories": {
-      "output": "dist"
-    },
+    "directories": { "output": "dist" },
     "publish": {
       "provider": "github",
       "owner": "MissApp0",
@@ -42,10 +43,8 @@
       "releaseType": "release"
     },
     "win": {
-      "target": [
-        { "target": "nsis", "arch": ["x64"] }
-      ],
-      "artifactName": "MissApp-Setup-${version}.${ext}"
+      "target": [{ "target": "nsis", "arch": ["x64"] }],
+      "artifactName": "MissApp-GitHub-Cloner-Setup-${version}.${ext}"
     },
     "nsis": {
       "oneClick": false,
@@ -53,13 +52,7 @@
       "perMachine": false,
       "deleteAppDataOnUninstall": false
     },
-    "linux": {
-      "target": ["AppImage"],
-      "category": "Network"
-    },
-    "mac": {
-      "target": ["dmg"],
-      "category": "public.app-category.social-networking"
-    }
+    "linux": { "target": ["AppImage"], "category": "Development" },
+    "mac": { "target": ["dmg"], "category": "public.app-category.developer-tools" }
   }
 }
