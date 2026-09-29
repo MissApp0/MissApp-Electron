@@ -4,8 +4,12 @@ on:
   push:
     tags:
       - "v*"
+
 permissions:
   contents: write
+
+env:
+  ELECTRON_VERSION: "38.2.0"
 
 jobs:
   build-windows:
@@ -14,42 +18,47 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Setup Node
-        uses: actions/setup-node@v4
-        with:
-          node-version: 22
-
-      - name: Set app version from release tag
+      - name: Build without npm
         shell: pwsh
         run: |
-          $version = "${{ github.ref_name }}".TrimStart('v')
-          npm version $version --no-git-tag-version --allow-same-version
-          Write-Host "Building MissApp version $version"
-      - name: Install build dependencies
-        run: npm install
+          $version = "${{ github.ref_name }}".TrimStart("v")
+          $electronZip = "$env:RUNNER_TEMP\\electron.zip"
+          $electronDir = "$env:RUNNER_TEMP\\electron"
+          $buildDir = "$env:GITHUB_WORKSPACE\\build\\MissApp"
+          $url = "https://github.com/electron/electron/releases/download/v$env:ELECTRON_VERSION/electron-v$env:ELECTRON_VERSION-win32-x64.zip"
+          Invoke-WebRequest -Uri $url -OutFile $electronZip
+          Expand-Archive -Path $electronZip -DestinationPath $electronDir -Force
+          New-Item -ItemType Directory -Force -Path "$buildDir\\resources\\app" | Out-Null
+          Copy-Item "$electronDir\\electron.exe" "$buildDir\\MissApp.exe"
+          Copy-Item "$env:GITHUB_WORKSPACE\\main.js" "$buildDir\\resources\\app\\main.js"
+          Copy-Item "$env:GITHUB_WORKSPACE\\preload.js" "$buildDir\\resources\\app\\preload.js"
+          Copy-Item "$env:GITHUB_WORKSPACE\\call.html" "$buildDir\\resources\\app\\call.html"
+          $package = @{ name = "missapp-desktop"; productName = "MissApp"; version = $version; description = "MissApp desktop client."; main = "main.js" } | ConvertTo-Json
+          Set-Content -Path "$buildDir\\resources\\app\\package.json" -Value $package -Encoding UTF8
+          $makensis = Get-Command makensis -ErrorAction SilentlyContinue
+          if (-not $makensis) {
+            $candidates = @("C:\\Program Files (x86)\\NSIS\\makensis.exe","C:\\Program Files\\NSIS\\makensis.exe")
+            $makensisPath = $candidates | Where-Object { Test-Path $_ } | Select-Object -First 1
+          } else { $makensisPath = $makensis.Source }
+          if (-not $makensisPath) { throw "NSIS (makensis.exe) is not installed on the GitHub Actions runner." }
+          New-Item -ItemType Directory -Force -Path "$env:GITHUB_WORKSPACE\\dist" | Out-Null
+          $env:MISSAPP_VERSION = $version
+          & $makensisPath "$env:GITHUB_WORKSPACE\\installer.nsi"
+          if ($LASTEXITCODE -ne 0) { throw "NSIS installer build failed with exit code $LASTEXITCODE." }
+          Rename-Item "$env:GITHUB_WORKSPACE\\dist\\MissApp-SETUP.exe" "MissApp-$version-Setup.exe"
+          Compress-Archive -Path "$buildDir\\*" -DestinationPath "$env:GITHUB_WORKSPACE\\dist\\MissApp-$version-Portable.zip" -Force
+          Get-ChildItem "$env:GITHUB_WORKSPACE\\dist"
 
-      - name: Build Windows EXE
-        run: npm run dist:win -- --publish never
-
-      - name: Verify Windows EXE
-        shell: pwsh
-        run: |
-          $exe = Get-ChildItem -Path dist -Filter *.exe
-          if (-not $exe) { throw "No Windows EXE was produced." }
-          $exe | Select-Object FullName, Length
-
-      - name: Upload workflow artifact
+      - name: Upload Windows artifacts
         uses: actions/upload-artifact@v4
         with:
-          name: MissApp-Windows-EXE
+          name: MissApp-Windows
           path: |
             dist/*.exe
-            dist/*.yml
-            dist/*.blockmap
+            dist/*.zip
           if-no-files-found: error
 
-      - name: Attach EXE to GitHub Release
-        if: startsWith(github.ref, 'refs/tags/v')
+      - name: Attach Windows artifacts to GitHub Release
         uses: softprops/action-gh-release@v3
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -57,8 +66,7 @@ jobs:
           tag_name: ${{ github.ref_name }}
           files: |
             dist/*.exe
-            dist/*.yml
-            dist/*.blockmap
+            dist/*.zip
           generate_release_notes: true
           draft: false
           prerelease: false
